@@ -1,0 +1,13 @@
+{
+  "canisters": {
+    "token_manager": {
+      "type": "custom",
+      "main": "src/index.ts",
+      "candid": "src/index.did",
+      "build": "npx azle token_manager",
+      "ts": "src/index.ts",
+      "wasm": ".azle/token_manager/token_manager.wasm",
+      "gzip": true
+    }
+  }
+}

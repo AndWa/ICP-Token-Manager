@@ -1,0 +1,7 @@
+service: () -> {
+    getCoinPrice: (text) -> (variant {Ok:text; Err:text});
+    getFavoriteTokens: () -> (variant {Ok:vec record {name:text; symbol:text}; Err:text}) query;
+    removeFavoriteToken: (text) -> (variant {Ok:text; Err:text});
+    saveFavoriteToken: (record {name:text; symbol:text}) -> (variant {Ok:text; Err:text});
+    transformHttpResponse: (record {context:vec nat8; response:record {status:nat; body:vec nat8; headers:vec record {value:text; name:text}}}) -> (record {status:nat; body:vec nat8; headers:vec record {value:text; name:text}}) query;
+}
