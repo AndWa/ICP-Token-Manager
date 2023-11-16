@@ -1,6 +1,31 @@
 # ICP-Token-Manager
 
-This is a simple canister that uses the CoinGecko API to get the price of a given cryptocurrency. It also allows users to save their favorite tokens and retrieve them later.
+This project is a canister that leverages the Internet Computer Protocol (ICP) and the Azle framework. It is designed to interact with the CoinGecko API for fetching real-time cryptocurrency prices and enables users to manage a watchlist of their favorite cryptocurrencies.
+
+## Key Components
+
+- **CryptoToken**: Records the essential details of a cryptocurrency, such as its name and symbol.
+- **UserFavorites**: Associates a user's unique Principal identifier with their list of favorite cryptocurrencies.
+- **userFavoritesStorage**: Utilizes `StableBTreeMap` for stable storage, ensuring persistence of user favorites across system updates.
+
+## Features
+
+- **getCoinPrice**: Retrieves the current price of a specified cryptocurrency in USD from the CoinGecko API.
+- **saveFavoriteToken**: Allows a user to add a cryptocurrency to their favorites list.
+- **removeFavoriteToken**: Permits a user to remove a cryptocurrency from their favorites list.
+- **getFavoriteTokens**: Fetches the list of a user's favorite cryptocurrencies.
+
+## Interaction
+
+Users can interact with the canister via its public methods. The application supports both reading and writing operations, enabling users to update their watchlist and access up-to-date pricing information.
+
+## External HTTP Requests
+
+The canister makes use of `managementCanister.http_request` to execute outbound HTTP requests to the CoinGecko API.
+
+## Purpose
+
+The provided code snippet serves an educational purpose, demonstrating how to build a canister on the ICP using the Azle framework.
 
 ## How to run the project
 
@@ -49,7 +74,7 @@ dfx stop
 
 Use cases can be done through the **Candid interface** or using the command line with the commands below.
 
-## Get coin price by calling coingecko api
+## Get coin price by calling CoinGecko API
 
 ```bash
 dfx canister call token_manager getCoinPrice '("internet-computer")'
