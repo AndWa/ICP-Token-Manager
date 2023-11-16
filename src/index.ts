@@ -45,7 +45,7 @@ const userFavoritesStorage = StableBTreeMap(Principal, UserFavorites, 1);
  */
 export default Canister({
   getCoinPrice: update([text], Result(text, text), async (coinId) => {
-    const coin = coinId.toLowerCase();
+    const coin = encodeURIComponent(coinId.toLowerCase());
 
     const response = await ic.call(managementCanister.http_request, {
       args: [
@@ -70,58 +70,59 @@ export default Canister({
       return Err("Failed to get coin price");
     }
 
-    var body = JSON.parse(new TextDecoder().decode(response.body));
+    const body = JSON.parse(new TextDecoder().decode(response.body));
 
     if (!body[coin]) {
       return Err("Coin not found");
     }
 
     const price = body[coin].usd;
-    return Ok(`The price of ${coin} is $${price}`);
+    return Ok(`The price of ${coinId} is $${price}`);
   }),
 
   saveFavoriteToken: update([CryptoToken], Result(text, text), (token) => {
     const userId = ic.caller();
+
+    if (!token || !token.name || !token.symbol) {
+      return Err("Invalid token data");
+    }
 
     const entry = {
       id: userId,
       favorites: [token],
     };
 
-    if (userFavoritesStorage.containsKey(userId) === false) {
+    if (!userFavoritesStorage.containsKey(userId)) {
       userFavoritesStorage.insert(userId, entry);
     } else {
       const favorites = userFavoritesStorage.get(userId);
-      entry.favorites = [...favorites.Some.favorites, token];
-      userFavoritesStorage.insert(userId, entry);
+      const updatedFavorites = { ...favorites, favorites: [...favorites.favorites, token] };
+      userFavoritesStorage.insert(userId, updatedFavorites);
     }
 
     return Ok(`Token ${token.name} added to favorites`);
   }),
+
   removeFavoriteToken: update([text], Result(text, text), (tokenSymbol) => {
     const userId = ic.caller();
 
-    if (userFavoritesStorage.containsKey(userId) === false) {
+    if (!userFavoritesStorage.containsKey(userId)) {
       return Err("No favorites found");
     }
 
-    const tokens = userFavoritesStorage.get(userId).Some.favorites;
+    const favorites = userFavoritesStorage.get(userId).favorites;
 
-    const token: typeof CryptoToken = tokens.find(
-      (token: typeof CryptoToken) => token.symbol === tokenSymbol
-    );
+    const token = favorites.find((t) => t.symbol.toLowerCase() === tokenSymbol.toLowerCase());
 
     if (!token) {
       return Err("Token not found");
     }
 
-    const favorites = tokens.filter(
-      (token: typeof CryptoToken) => token.symbol !== tokenSymbol
-    );
+    const updatedFavorites = favorites.filter((t) => t.symbol.toLowerCase() !== tokenSymbol.toLowerCase());
 
     const entry = {
       id: userId,
-      favorites: favorites,
+      favorites: updatedFavorites,
     };
 
     userFavoritesStorage.insert(userId, entry);
@@ -132,18 +133,19 @@ export default Canister({
   getFavoriteTokens: query([], Result(Vec(CryptoToken), text), () => {
     const userId = ic.caller();
 
-    if (userFavoritesStorage.containsKey(userId) === false) {
+    if (!userFavoritesStorage.containsKey(userId)) {
       return Err("No favorites found");
     }
 
-    const favorites = userFavoritesStorage.get(userId);
+    const favorites = userFavoritesStorage.get(userId).favorites;
 
-    return favorites ? Ok(favorites.Some.favorites) : Err("No favorites found");
+    return favorites ? Ok(favorites) : Err("No favorites found");
   }),
+
   transformHttpResponse: query([HttpTransformArgs], HttpResponse, (args) => {
     return {
       ...args.response,
-      headers: [],
+      headers: ["Content-Security-Policy: default-src 'self'"],
     };
   }),
 });
